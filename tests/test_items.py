@@ -14,8 +14,8 @@ class TestUsers(unittest.TestCase):
         item = Item(
             description="Antique Tea set",
             donor="Demo McDemoFace",
+            donor_email="demomcdemoface@example.com",
             price=140.00,
-            status="For Sale",
             title="Tea Set",
             category="furniture",
             charity="Big Cat Rescue",
@@ -30,8 +30,8 @@ class TestUsers(unittest.TestCase):
         item = Item(
           description="Vintage wood rocking chair",
           donor="Demo McDemoFace",
+          donor_email="demomcdemoface@example.com",
           price=40.00,
-          status="For Sale",
           title="Rocking Chair",
           category='furniture',
           charity='Big Cat Rescue',
@@ -61,6 +61,21 @@ class TestUsers(unittest.TestCase):
         self.assertEquals(payload['items'][0]['charity'], 'Big Cat Rescue')
         self.assertEquals(payload['items'][-1]['donor'], 'Demo McDemoFace')
         self.assertEquals(payload['items'][-1]['price'], 40.00)
+        self.assertEquals(payload['items'][-1]['status'], 'available')
+    
+
+    def test_get_one_item(self):
+        response = self.test_app.get(
+            '/items/2',
+            follow_redirects=True
+        )
+
+        self.assertEquals(response.status, "200 OK")
+        payload = json.loads(response.data)
+        self.assertEquals(payload['id'], 2)
+        self.assertEquals(payload['title'], 'Rocking Chair')
+        self.assertNotEqual(payload['title'], 'Antique Tea set')
+      
 
     def test_create_items(self):
         response = self.test_app.post(
@@ -68,6 +83,7 @@ class TestUsers(unittest.TestCase):
             json={
                 'description': '12 inch tablet from Samsung',
                 'donor': 'Demo McDemoFace',
+                'donor_email': "demomcdemoface@example.com",
                 'id': 2,
                 'price': 56.00,
                 'status': 'For Sale',
@@ -86,6 +102,37 @@ class TestUsers(unittest.TestCase):
         self.assertEquals(payload['title'], 'Android Tablet')
         self.assertEquals(payload['charity'], 'Big Cat Rescue')
 
+    def test_return_error_for_missing_title_post(self):
+        try:
+            response = self.test_app.post(
+                '/items',
+                json={
+                    'description': '12 inch tablet from Samsung',
+                    'donor': 'Demo McDemoFace',
+                    'donor_email': "demomcdemoface@example.com",
+                    'id': 2,
+                    'price': 56.00,
+                    'category': 'electronics',
+                    'charity': 'Big Cat Rescue',
+                    'charity_url': "http://www.thisisatotallyligiturl.com",
+                    'charity_score': 4,
+                    'image': 'img.ul'
+                },
+                follow_redirects=True
+            )
+        except Exception as e:
+            return (str(e))
+
+        self.assertEquals(response.status, "400 BAD REQUEST")
+
+    def test_error_for_nonexisting_item(self):
+        response = self.test_app.get(
+            '/items/10',
+            follow_redirects=True
+        )
+
+        self.assertEquals(response.status, "404 NOT FOUND")
+        
 
 if __name__ == "__main__":
     unittest.main()

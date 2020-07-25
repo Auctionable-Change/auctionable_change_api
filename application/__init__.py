@@ -43,4 +43,5 @@ def create_app(config_name):
     api.add_resource(BidResources, '/bids', '/bids/<int:bid_id>')
     api.add_resource(CharityResources, '/charities', '/charities/<string:search_term>')
 
+    
     return app
